@@ -2,43 +2,39 @@ export default function ParkingSign({ type, position }) {
   if (type === '2P') {
     return (
       <div className="absolute bottom-0 flex flex-col items-center transform -translate-x-1/2 z-20" style={{ left: `${position}%` }}>
-        <div className="w-28 bg-white border-[3px] border-primary rounded-md shadow-sign flex flex-col items-center py-2 px-2 select-none">
+        <div className="w-28 bg-white border-[3px] border-primary rounded-md shadow-sign flex flex-col items-center py-2 px-2 select-none overflow-hidden">
           <div className="flex w-full items-center justify-center mb-2">
             <span className="font-sign font-bold text-primary text-6xl leading-none mr-2">2</span>
             <span className="font-sign font-bold text-primary text-6xl leading-none">P</span>
           </div>
-          
-          <div className="w-full space-y-1">
-            <div className="flex items-baseline justify-between">
-              <div className="flex items-baseline">
+
+          <div className="w-full">
+            <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-2">
+              <div className="flex items-baseline min-w-0">
                 <span className="font-sign font-bold text-primary text-2xl leading-none">8</span>
-                <span className="font-sign font-bold text-primary text-xs leading-none align-super" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
+                <span className="font-sign font-bold text-primary text-xs leading-none" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
                 <span className="font-sign font-bold text-primary text-xs leading-none">AM</span>
                 <span className="font-sign font-bold text-primary text-xl leading-none mx-1">-</span>
                 <span className="font-sign font-bold text-primary text-2xl leading-none">6</span>
               </div>
-            </div>
-            <div className="flex justify-end">
               <span className="font-sign font-bold text-primary text-xs leading-none">PM</span>
             </div>
-            <div className="text-center">
+            <div className="text-center mt-1">
               <span className="font-sign font-bold text-primary text-sm leading-none">MON - FRI</span>
             </div>
-            
-            <div className="flex items-baseline justify-between mt-2">
-              <div className="flex items-baseline">
+
+            <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-2 mt-2">
+              <div className="flex items-baseline min-w-0">
                 <span className="font-sign font-bold text-primary text-2xl leading-none">8</span>
-                <span className="font-sign font-bold text-primary text-xs leading-none align-super" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
+                <span className="font-sign font-bold text-primary text-xs leading-none" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
                 <span className="font-sign font-bold text-primary text-xs leading-none">AM</span>
                 <span className="font-sign font-bold text-primary text-xl leading-none mx-1">-</span>
                 <span className="font-sign font-bold text-primary text-2xl leading-none">12</span>
-                <span className="font-sign font-bold text-primary text-xs leading-none align-super" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
+                <span className="font-sign font-bold text-primary text-xs leading-none" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
               </div>
-            </div>
-            <div className="flex justify-end">
               <span className="font-sign font-bold text-primary text-xs leading-none">PM</span>
             </div>
-            <div className="text-center">
+            <div className="text-center mt-1">
               <span className="font-sign font-bold text-primary text-sm leading-none">SAT</span>
             </div>
           </div>
@@ -57,7 +53,7 @@ export default function ParkingSign({ type, position }) {
   if (type === '1/4P') {
     return (
       <div className="absolute bottom-0 flex flex-col items-center transform -translate-x-1/2 z-20" style={{ left: `${position}%` }}>
-        <div className="w-28 bg-white border-[3px] border-primary rounded-md shadow-sign flex flex-col items-center py-2 px-2 select-none">
+        <div className="w-28 bg-white border-[3px] border-primary rounded-md shadow-sign flex flex-col items-center py-2 px-2 select-none overflow-hidden">
           <div className="flex w-full items-center justify-center mb-2">
             <div className="relative inline-block mr-1">
               <span className="font-sign font-bold text-primary text-5xl leading-none">1</span>
@@ -66,36 +62,32 @@ export default function ParkingSign({ type, position }) {
             </div>
             <span className="font-sign font-bold text-primary text-6xl leading-none ml-6">P</span>
           </div>
-          
-          <div className="w-full space-y-1">
-            <div className="flex items-baseline justify-between">
-              <div className="flex items-baseline">
+
+          <div className="w-full">
+            <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-2">
+              <div className="flex items-baseline min-w-0">
                 <span className="font-sign font-bold text-primary text-2xl leading-none">9</span>
                 <span className="font-sign font-bold text-primary text-xs leading-none">AM</span>
                 <span className="font-sign font-bold text-primary text-xl leading-none mx-1">-</span>
                 <span className="font-sign font-bold text-primary text-2xl leading-none">5</span>
-                <span className="font-sign font-bold text-primary text-xs leading-none align-super" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
+                <span className="font-sign font-bold text-primary text-xs leading-none" style={{ fontSize: '0.5rem', verticalAlign: 'super' }}>30</span>
               </div>
-            </div>
-            <div className="flex justify-end">
               <span className="font-sign font-bold text-primary text-xs leading-none">PM</span>
             </div>
-            <div className="text-center">
+            <div className="text-center mt-1">
               <span className="font-sign font-bold text-primary text-sm leading-none">MON - FRI</span>
             </div>
-            
-            <div className="flex items-baseline justify-between mt-2">
-              <div className="flex items-baseline">
+
+            <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-2 mt-2">
+              <div className="flex items-baseline min-w-0">
                 <span className="font-sign font-bold text-primary text-2xl leading-none">9</span>
                 <span className="font-sign font-bold text-primary text-xs leading-none">AM</span>
                 <span className="font-sign font-bold text-primary text-xl leading-none mx-1">-</span>
                 <span className="font-sign font-bold text-primary text-2xl leading-none">12</span>
               </div>
-            </div>
-            <div className="flex justify-end">
               <span className="font-sign font-bold text-primary text-xs leading-none">NOON</span>
             </div>
-            <div className="text-center">
+            <div className="text-center mt-1">
               <span className="font-sign font-bold text-primary text-sm leading-none">SAT</span>
             </div>
           </div>
