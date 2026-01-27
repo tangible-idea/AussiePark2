@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Australian Parking Quiz</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#006b3f", // Australian Traffic Sign Green
+                        "background-light": "#f0f4f8",
+                        "background-dark": "#0f172a",
+                        "road-light": "#334155",
+                        "road-dark": "#1e293b",
+                        "sign-white": "#ffffff",
+                    },
+                    fontFamily: {
+                        display: ["'Barlow Condensed'", "sans-serif"],
+                        body: ["'Inter'", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'pole': '2px 0 5px rgba(0,0,0,0.3)',
+                        'sign': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .parking-pattern {
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 19px, #ffffff 20px);
+        }.sign-text {
+            line-height: 0.9;
+        }
+        .fraction {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 0.8em;
+            text-align: center;
+        }
+        .fraction > span {
+            display: block;
+            padding-top: 0.1em;
+        }
+        .fraction span.bar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-body min-h-screen flex flex-col text-slate-800 dark:text-slate-100 overflow-hidden">
+<nav class="w-full p-4 flex justify-between items-center z-10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
+<div class="flex items-center space-x-2">
+<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">LEVEL 4</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Score</span>
+<span class="text-2xl font-bold text-primary">850</span>
+</div>
+</nav>
+<main class="flex-grow flex flex-col relative">
+<div class="px-6 pt-6 pb-2">
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 border-l-8 border-primary relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-icons-round text-6xl text-primary">schedule</span>
+</div>
+<h2 class="text-sm font-bold text-primary uppercase tracking-wide mb-1">Current Scenario</h2>
+<p class="text-xl md:text-2xl font-bold leading-tight mb-4">
+                    It is <span class="text-primary">Tuesday at 10:30 AM</span>.
+                    Where can you park for <span class="underline decoration-primary decoration-4 underline-offset-2">2 hours</span>?
+                </p>
+<div class="flex space-x-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
+<span class="flex items-center"><span class="material-icons-round text-sm mr-1">info</span> Tap the road to park</span>
+</div>
+</div>
+</div>
+<div class="flex-grow flex flex-col justify-end relative mt-4">
+<div class="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-blue-50 to-slate-200 dark:from-slate-900 dark:to-slate-800"></div>
+<div class="relative z-10 w-full h-64 flex items-end justify-center pb-0">
+<div class="absolute bottom-0 w-full h-32 bg-slate-300 dark:bg-slate-700 border-t border-slate-400 dark:border-slate-600"></div>
+<div class="w-full max-w-md flex justify-between px-4 items-end relative" style="height: 280px;">
+<div class="w-1/3 h-full"></div>
+<div class="absolute left-[30%] bottom-0 flex flex-col items-center transform -translate-x-1/2 z-20">
+<div class="w-24 bg-white border-[3px] border-primary rounded-md shadow-sign flex flex-col items-center py-1 select-none">
+<div class="flex w-full px-1 items-start justify-center">
+<span class="font-display font-bold text-primary text-5xl leading-none">2</span>
+<span class="font-display font-bold text-primary text-3xl mt-1">P</span>
+</div>
+<div class="w-full px-1.5 mt-0.5">
+<div class="flex justify-between items-end border-b border-primary/20 pb-0.5 mb-0.5">
+<div class="flex flex-col text-primary font-display font-bold leading-none">
+<span class="text-sm">8<span class="text-[0.6rem]">30</span><span class="text-[0.6rem] ml-0.5">AM</span></span>
+<span class="text-sm text-center block leading-none">-</span>
+<span class="text-sm">6<span class="text-[0.6rem] ml-0.5">PM</span></span>
+</div>
+<div class="text-primary font-display font-bold text-xs leading-none text-right flex flex-col justify-center h-full">
+<span>MON</span>
+<span class="mx-auto block h-px w-3 bg-primary my-0.5"></span>
+<span>FRI</span>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex flex-col text-primary font-display font-bold leading-none">
+<span class="text-sm">8<span class="text-[0.6rem]">30</span><span class="text-[0.6rem] ml-0.5">AM</span></span>
+<span class="text-sm text-center block leading-none">-</span>
+<span class="text-sm">12<span class="text-[0.6rem]">30</span><span class="text-[0.6rem] ml-0.5">PM</span></span>
+</div>
+<div class="text-primary font-display font-bold text-xs leading-none text-right flex flex-col justify-center h-full">
+<span>SAT</span>
+</div>
+</div>
+</div>
+<div class="w-full px-2 mt-1">
+<div class="h-3 bg-primary w-full relative" style="clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 20% 100%, 20% 140%, 0% 50%, 20% -40%);"></div>
+</div>
+</div>
+<div class="w-2 h-24 bg-gray-400 rounded-b-sm shadow-pole relative z-0"></div>
+</div>
+<div class="w-1/3 h-full"></div>
+<div class="absolute left-[70%] bottom-0 flex flex-col items-center transform -translate-x-1/2 z-20">
+<div class="w-24 bg-white border-[3px] border-primary rounded-md shadow-sign flex flex-col items-center py-1 select-none">
+<div class="flex w-full px-1 items-start justify-center border-b border-primary/20 pb-1">
+<div class="flex items-center">
+<span class="font-display font-bold text-primary text-3xl leading-none">1</span>
+<div class="flex flex-col text-primary font-display font-bold text-lg leading-none mx-0.5">
+<span class="border-b-2 border-primary mb-0.5">/</span>
+<span>4</span>
+</div>
+</div>
+<span class="font-display font-bold text-primary text-4xl mt-0">P</span>
+</div>
+<div class="w-full px-1.5 mt-1">
+<div class="flex justify-between items-center">
+<div class="flex flex-col text-primary font-display font-bold leading-none">
+<span class="text-sm">9<span class="text-[0.6rem] ml-0.5">AM</span></span>
+<span class="text-sm">- 5<span class="text-[0.6rem] ml-0.5">PM</span></span>
+</div>
+<div class="text-primary font-display font-bold text-sm leading-none text-right">
+<span>MON</span>
+<span class="block">- FRI</span>
+</div>
+</div>
+</div>
+<div class="w-full px-2 mt-1 flex space-x-1">
+<div class="h-3 bg-primary flex-1 relative" style="clip-path: polygon(40% 0%, 100% 0%, 100% 100%, 40% 100%, 40% 150%, 0% 50%, 40% -50%);"></div>
+<div class="h-3 bg-primary flex-1 relative transform rotate-180" style="clip-path: polygon(40% 0%, 100% 0%, 100% 100%, 40% 100%, 40% 150%, 0% 50%, 40% -50%);"></div>
+</div>
+</div>
+<div class="w-2 h-24 bg-gray-400 rounded-b-sm shadow-pole relative z-0"></div>
+</div>
+<div class="w-1/3 h-full"></div>
+</div>
+</div>
+<div class="h-48 bg-road-light dark:bg-road-dark w-full relative flex justify-center perspective-1000 overflow-hidden border-t-4 border-slate-400 dark:border-slate-600">
+<div class="absolute inset-0 opacity-10" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBkjWIts2knjc8-nj4eflGjH9u0QDYFo_c8_YiOxApsR1A_2n2_dT_muBytwImWTJaaMBrI7J5o8oVRHOVXraPYAsbTB6JchOljmGqj5cKb2nZavnDvXx3Ft5YpzvqaD286Fv9F_iX2-hw3wjqlW7if_GcUgWaK0ykjNVjmLvIEqYztYpvdeZoBKnyjhobFXpX38hP6DLNAA3nu03hUgoroDpBK_WLdNpdnn1Fs5KFT1CYg2Q1gBs2p-4t4JT3rnbW4Wu-yr02j5ye9');"></div>
+<div class="w-full max-w-md flex h-full relative z-10 px-4">
+<button class="group w-1/3 h-full border-r-2 border-dashed border-slate-500/50 relative focus:outline-none">
+<div class="absolute inset-2 rounded-lg bg-white/5 group-hover:bg-primary/20 group-focus:bg-primary/30 group-active:scale-95 transition-all duration-200 flex items-center justify-center border-2 border-transparent group-hover:border-primary/50">
+<div class="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-white px-3 py-1.5 rounded-full shadow-lg font-bold text-sm transform group-hover:scale-110 transition-transform flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-slate-400 group-hover:bg-primary"></span>
+                                Spot A
+                            </div>
+</div>
+</button>
+<button class="group w-1/3 h-full border-r-2 border-dashed border-slate-500/50 relative focus:outline-none">
+<div class="absolute inset-2 rounded-lg bg-white/5 group-hover:bg-primary/20 group-focus:bg-primary/30 group-active:scale-95 transition-all duration-200 flex items-center justify-center border-2 border-transparent group-hover:border-primary/50">
+<div class="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-white px-3 py-1.5 rounded-full shadow-lg font-bold text-sm transform group-hover:scale-110 transition-transform flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-slate-400 group-hover:bg-primary"></span>
+                                Spot B
+                            </div>
+</div>
+</button>
+<button class="group w-1/3 h-full relative focus:outline-none">
+<div class="absolute inset-2 rounded-lg bg-white/5 group-hover:bg-primary/20 group-focus:bg-primary/30 group-active:scale-95 transition-all duration-200 flex items-center justify-center border-2 border-transparent group-hover:border-primary/50">
+<div class="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-white px-3 py-1.5 rounded-full shadow-lg font-bold text-sm transform group-hover:scale-110 transition-transform flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-slate-400 group-hover:bg-primary"></span>
+                                Spot C
+                            </div>
+</div>
+</button>
+</div>
+</div>
+<div class="absolute bottom-6 w-full flex justify-center pointer-events-none">
+<span class="bg-black/50 text-white px-4 py-1 rounded-full text-xs backdrop-blur-md">
+                    Tap a parking spot to answer
+                </span>
+</div>
+</div>
+</main>
+
+</body></html>

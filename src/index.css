@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    min-height: max(884px, 100dvh);
+  }
+}
+
+@layer utilities {
+  .parking-pattern {
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 19px, #ffffff 20px);
+  }
+  
+  .sign-text {
+    line-height: 0.9;
+  }
+  
+  .fraction {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 0.8em;
+    text-align: center;
+  }
+  
+  .fraction > span {
+    display: block;
+    padding-top: 0.1em;
+  }
+  
+  .fraction span.bar {
+    display: none;
+  }
+}
