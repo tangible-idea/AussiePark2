@@ -18,6 +18,7 @@ export default {
       fontFamily: {
         display: ["'Barlow Condensed'", "sans-serif"],
         body: ["'Inter'", "sans-serif"],
+        sign: ["'AS17'", "'Barlow Condensed'", "sans-serif"],
       },
       boxShadow: {
         'pole': '2px 0 5px rgba(0,0,0,0.3)',
