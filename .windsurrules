@@ -1,0 +1,52 @@
+# Project: aussie-park-quiz (React + Vite + Tailwind)
+
+## Goals
+- Make minimal, targeted changes.
+- Keep the app runnable at all times.
+- Preserve existing UI/UX patterns and Tailwind styling.
+
+## Tech Stack & Structure
+- Framework: React 18
+- Build tool: Vite (ESM)
+- Styling: TailwindCSS + PostCSS
+- Source layout:
+  - src/main.jsx: entry
+  - src/App.jsx: main app composition
+  - src/components/: UI components
+  - src/services/: external API/network logic
+  - public/ and signs/: static assets
+
+## Commands
+- Dev: `npm run dev`
+- Build: `npm run build`
+- Preview: `npm run preview`
+
+## Coding Conventions
+- Use existing code style in the repository.
+- Prefer functional React components and hooks.
+- Keep imports at the top of files.
+- Use `const` by default; avoid unnecessary reassignments.
+- Avoid introducing new dependencies unless necessary.
+
+## Styling Conventions (Tailwind)
+- Prefer Tailwind utility classes over new CSS unless there is an existing pattern in `src/index.css`.
+- Keep color tokens consistent with `tailwind.config.js` (e.g., `bg-background-light`, `bg-background-dark`).
+
+## API / Secrets
+- Never hardcode API keys.
+- Poe API key is expected via `import.meta.env.VITE_POE_API_KEY`.
+- Do not modify `.env` (it is gitignored). If configuration changes are needed, update `.env.example` only.
+
+## Error Handling
+- When adding network calls, handle `response.ok` and surface actionable error messages to the UI.
+- Prefer returning structured data from `src/services/*` and keep UI-specific messaging in components.
+
+## Files to Avoid Touching Unless Required
+- `package-lock.json` unless dependencies change.
+- `dist/` output (should not be committed).
+- `.env` (gitignored).
+
+## When Asked To Add Features
+- Add or adjust logic in `src/services/*` for API interactions.
+- Add UI changes in `src/components/*` and wire in `src/App.jsx`.
+- Keep changes small and validate by running `npm run dev` (user-run).
