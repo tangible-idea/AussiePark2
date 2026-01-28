@@ -4,8 +4,8 @@ export default function ParkingSign({ type, position }) {
       <div className="absolute bottom-0 flex flex-col items-center transform -translate-x-1/2 z-20" style={{ left: `${position}%` }}>
         <div className="w-28 bg-white border-[3px] border-primary rounded-md shadow-sign flex flex-col items-center py-2 px-2 select-none overflow-hidden">
           <div className="flex w-full items-center justify-center mb-2">
-            <span className="font-sign font-bold text-primary text-6xl leading-none mr-2">2</span>
-            <span className="font-sign font-bold text-primary text-6xl leading-none">P</span>
+            <span className="font-sign font-bold text-primary text-4xl leading-none mr-2">2</span>
+            <span className="font-sign font-bold text-primary text-4xl leading-none">P</span>
           </div>
 
           <div className="w-full">
@@ -20,7 +20,7 @@ export default function ParkingSign({ type, position }) {
               <span className="font-sign font-bold text-primary text-xs leading-none">PM</span>
             </div>
             <div className="text-center mt-1">
-              <span className="font-sign font-bold text-primary text-sm leading-none">MON - FRI</span>
+              <span className="font-sign font-bold text-primary text-xs leading-none" style={{ fontSize: '0.6rem', verticalAlign: 'super' }}>MON - FRI</span>
             </div>
 
             <div className="grid grid-cols-[1fr_auto] items-baseline gap-x-2 mt-2">
@@ -35,7 +35,7 @@ export default function ParkingSign({ type, position }) {
               <span className="font-sign font-bold text-primary text-xs leading-none">PM</span>
             </div>
             <div className="text-center mt-1">
-              <span className="font-sign font-bold text-primary text-sm leading-none">SAT</span>
+              <span className="font-sign font-bold text-primary text-xs leading-none">SAT</span>
             </div>
           </div>
           
