@@ -8,8 +8,9 @@ export const levels = [
     },
     signs: [
       {
-        type: "2P",
-        position: 33.33
+        type: "P10",
+        position: 33.33,
+        direction: "both"
       }
     ],
     spots: [
@@ -28,8 +29,9 @@ export const levels = [
     },
     signs: [
       {
-        type: "1/4P",
-        position: 33.33
+        type: "8P",
+        position: 33.33,
+        direction: "left"
       }
     ],
     spots: [

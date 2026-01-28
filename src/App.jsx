@@ -59,7 +59,13 @@ function App() {
             
             <div className="w-full max-w-md flex justify-between px-4 items-end relative" style={{height: '280px'}}>
               {currentLevel.signs.map((sign, index) => (
-                <ParkingSign key={index} type={sign.type} position={sign.position} />
+                <ParkingSign 
+                  key={index} 
+                  type={sign.type} 
+                  position={sign.position} 
+                  direction={sign.direction}
+                  schedules={sign.schedules}
+                />
               ))}
             </div>
           </div>
