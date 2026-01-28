@@ -6,11 +6,11 @@ const COLORS = {
 const Header = ({ type }) => {
   if (type === 'P10') {
     return (
-      <div className="w-full flex items-start justify-center mb-2 translate-x-[2px]">
+      <div className="w-full flex items-start justify-center mb-2 translate-x-[6px]">
         <span className="font-sign font-bold text-primary text-6xl leading-[0.78] tracking-[-0.06em]">P</span>
         <div className="flex flex-col items-start ml-1 -mt-0.5">
           <span className="font-sign font-bold text-primary text-5xl leading-[0.78] tracking-[-0.06em]">10</span>
-          <span className="font-sign font-bold text-primary text-[0.75rem] leading-none tracking-tight mt-1">MINUTE</span>
+          <span className="font-sign font-bold text-primary text-[0.75rem] leading-none tracking-tight mt-2">MINUTE</span>
         </div>
       </div>
     );
