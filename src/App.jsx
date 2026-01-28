@@ -122,12 +122,20 @@ function App() {
 
             <div className="w-full max-w-md flex justify-center px-4 items-end relative" style={{height: '280px'}}>
               {currentImage && (
-                <img
-                  src={currentImage}
-                  alt="Parking Sign"
-                  className="max-h-64 object-contain"
-                  style={{marginBottom: '8rem'}}
-                />
+                <div className="flex flex-col items-center relative">
+                  {/* Parking Sign */}
+                  <img
+                    src={currentImage}
+                    alt="Parking Sign"
+                    className="max-h-48 object-contain mb-2 relative z-20"
+                  />
+
+                  {/* Pole */}
+                  <div
+                    className="w-2 bg-slate-500 dark:bg-slate-600 relative z-10 shadow-md"
+                    style={{height: '12rem'}}
+                  ></div>
+                </div>
               )}
             </div>
           </div>
