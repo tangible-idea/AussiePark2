@@ -1,43 +1,106 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from './components/Navbar'
 import ScenarioCard from './components/ScenarioCard'
 import ParkingSign from './components/ParkingSign'
 import ParkingSpot from './components/ParkingSpot'
-import { levels } from './data/levels'
+import { analyzeSignImage, getRandomSignImage } from './services/poeApi'
 
 function App() {
-  const [currentLevelIndex, setCurrentLevelIndex] = useState(0)
+  const [currentLevel, setCurrentLevel] = useState(null)
+  const [currentImage, setCurrentImage] = useState(null)
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState(null)
   const [isAnswered, setIsAnswered] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [levelCount, setLevelCount] = useState(1)
+  const [error, setError] = useState(null)
 
-  const currentLevel = levels[currentLevelIndex]
+  // Load a new question on component mount and after correct answers
+  useEffect(() => {
+    loadNewQuestion()
+  }, [])
+
+  const loadNewQuestion = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Get a random sign image
+      const { base64, path } = await getRandomSignImage()
+      setCurrentImage(path)
+
+      // Analyze the image with AI
+      const questionData = await analyzeSignImage(base64)
+
+      // Add an ID for display purposes
+      setCurrentLevel({
+        id: levelCount,
+        ...questionData
+      })
+    } catch (error) {
+      console.error('Error loading question:', error)
+      setError('Failed to load question. Please check your API key and try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleSpotClick = (spotId) => {
-    if (isAnswered) return
+    if (isAnswered || !currentLevel) return
 
     const isCorrect = spotId === currentLevel.correctAnswer
     setIsAnswered(true)
-    
+
     if (isCorrect) {
       setScore(score + 100)
-      setFeedback({ type: 'success', message: '정답입니다! 🎉' })
+      setFeedback({
+        type: 'success',
+        message: `정답입니다! 🎉${currentLevel.explanation ? ' ' + currentLevel.explanation : ''}`
+      })
     } else {
       setFeedback({ type: 'error', message: '틀렸습니다. 다시 시도해보세요.' })
     }
 
     setTimeout(() => {
-      if (isCorrect && currentLevelIndex < levels.length - 1) {
-        setCurrentLevelIndex(currentLevelIndex + 1)
+      if (isCorrect) {
+        // Load next question
+        setLevelCount(levelCount + 1)
         setIsAnswered(false)
         setFeedback(null)
-      } else if (isCorrect) {
-        setFeedback({ type: 'success', message: '모든 레벨을 완료했습니다! 🏆' })
+        loadNewQuestion()
       } else {
         setIsAnswered(false)
         setFeedback(null)
       }
-    }, 1500)
+    }, 2500)
+  }
+
+  if (error) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark font-body min-h-screen flex flex-col text-slate-800 dark:text-slate-100 items-center justify-center p-6">
+        <div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-6 py-4 rounded-lg max-w-md text-center">
+          <h2 className="font-bold text-lg mb-2">Error</h2>
+          <p>{error}</p>
+          <button
+            onClick={loadNewQuestion}
+            className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading || !currentLevel) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark font-body min-h-screen flex flex-col text-slate-800 dark:text-slate-100 items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-lg">AI가 주차 표지판을 분석하고 있습니다...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -53,20 +116,19 @@ function App() {
         
         <div className="flex-grow flex flex-col justify-end relative mt-4">
           <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-blue-50 to-slate-200 dark:from-slate-900 dark:to-slate-800"></div>
-          
+
           <div className="relative z-10 w-full h-64 flex items-end justify-center pb-0">
             <div className="absolute bottom-0 w-full h-32 bg-slate-300 dark:bg-slate-700 border-t border-slate-400 dark:border-slate-600"></div>
-            
-            <div className="w-full max-w-md flex justify-between px-4 items-end relative" style={{height: '280px'}}>
-              {currentLevel.signs.map((sign, index) => (
-                <ParkingSign 
-                  key={index} 
-                  type={sign.type} 
-                  position={sign.position} 
-                  direction={sign.direction}
-                  schedules={sign.schedules}
+
+            <div className="w-full max-w-md flex justify-center px-4 items-end relative" style={{height: '280px'}}>
+              {currentImage && (
+                <img
+                  src={currentImage}
+                  alt="Parking Sign"
+                  className="max-h-64 object-contain"
+                  style={{marginBottom: '8rem'}}
                 />
-              ))}
+              )}
             </div>
           </div>
           
