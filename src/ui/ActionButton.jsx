@@ -11,6 +11,12 @@ const VARIANTS = {
     pressed: 'active:shadow-[0_2px_0_#0369a1,0_4px_10px_rgba(56,189,248,0.3)]',
     ring: 'ring-sky-300/50',
   },
+  food: {
+    face: 'bg-gradient-to-b from-emerald-300 via-emerald-500 to-emerald-600 border-emerald-100 text-emerald-950',
+    depth: 'shadow-[0_7px_0_#047857,0_12px_24px_rgba(52,211,153,0.4)]',
+    pressed: 'active:shadow-[0_2px_0_#047857,0_4px_10px_rgba(52,211,153,0.3)]',
+    ring: 'ring-emerald-300/50',
+  },
 }
 
 const STROKE = {
@@ -50,6 +56,13 @@ const ICONS = {
     <g {...STROKE}>
       <path d="M13.5 4.5H5.5v15h8" />
       <path d="M10.5 12h10M17.5 9l3 3-3 3" />
+    </g>
+  ),
+  food: (
+    <g {...STROKE}>
+      {/* 포크 + 나이프 */}
+      <path d="M7 3v6a2.5 2.5 0 0 0 5 0V3M9.5 3v18" />
+      <path d="M16.5 3c-1.7 2.5-2 6-.5 8v10" />
     </g>
   ),
 }

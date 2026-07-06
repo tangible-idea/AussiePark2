@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import {
   nodes, edges, rail, RAIL_W, ROAD_W, MAP_EXTENT,
-  buildings, trees, STATION,
+  buildings, trees, STATION, STORE, STORE_BAY,
 } from '../../game/mapData'
 import { textTexture } from '../shared/textTexture'
 
@@ -156,10 +156,83 @@ function Station() {
   )
 }
 
+// 편의점: 초록 간판 + 줄무늬 차양, 앞 도로변에 식사 지점 링
+function Store({ nearStore }) {
+  const ring = useRef()
+  const signTex = useMemo(
+    () => textTexture('MART 24', { fg: '#ffffff', bg: '#1e9e50', font: 'bold 58px Arial', w: 512, h: 96 }),
+    []
+  )
+  const eatTex = useMemo(
+    () => textTexture('EAT', { fg: '#ffffff', bg: '#059669', font: 'bold 64px Arial', w: 128, h: 128 }),
+    []
+  )
+  // 정면은 도로(식사 지점) 쪽
+  const facing = Math.atan2(STORE_BAY.x - STORE.x, STORE_BAY.z - STORE.z)
+  useFrame(({ clock }) => {
+    if (ring.current) {
+      const s = 1 + Math.sin(clock.elapsedTime * 4) * 0.08
+      ring.current.scale.set(s, s, 1)
+    }
+  })
+  return (
+    <group>
+      <group position={[STORE.x, 0, STORE.z]} rotation={[0, facing, 0]}>
+        {/* 본체 */}
+        <mesh position={[0, STORE.h / 2, 0]}>
+          <boxGeometry args={[STORE.w, STORE.h, STORE.d]} />
+          <meshLambertMaterial color="#f2f4f0" />
+        </mesh>
+        {/* 옥상 */}
+        <mesh position={[0, STORE.h + 0.25, 0]}>
+          <boxGeometry args={[STORE.w + 0.6, 0.5, STORE.d + 0.6]} />
+          <meshLambertMaterial color="#c9ccd2" />
+        </mesh>
+        {/* 통유리 쇼윈도 */}
+        <mesh position={[0, 1.7, STORE.d / 2 + 0.03]}>
+          <planeGeometry args={[STORE.w - 2.4, 2.6]} />
+          <meshLambertMaterial color="#9fd8e8" emissive="#5ec4dc" emissiveIntensity={0.35} />
+        </mesh>
+        {/* 줄무늬 차양 */}
+        {Array.from({ length: 7 }, (_, i) => (
+          <mesh
+            key={i}
+            position={[-STORE.w / 2 + 0.9 + i * ((STORE.w - 1.8) / 6), 3.3, STORE.d / 2 + 0.75]}
+            rotation={[0.5, 0, 0]}
+          >
+            <planeGeometry args={[(STORE.w - 1.8) / 6, 1.7]} />
+            <meshLambertMaterial color={i % 2 ? '#ffffff' : '#1e9e50'} side={THREE.DoubleSide} />
+          </mesh>
+        ))}
+        {/* 간판 */}
+        <mesh position={[0, STORE.h - 0.9, STORE.d / 2 + 0.06]}>
+          <planeGeometry args={[STORE.w - 1.2, 1.6]} />
+          <meshBasicMaterial map={signTex} />
+        </mesh>
+      </group>
+      {/* 식사 지점 (도로변) */}
+      <group position={[STORE_BAY.x, 0, STORE_BAY.z]}>
+        <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+          <ringGeometry args={[3.0, 3.9, 32]} />
+          <meshBasicMaterial color={nearStore ? '#22c55e' : '#10b981'} transparent opacity={0.85} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+          <circleGeometry args={[3.0, 32]} />
+          <meshBasicMaterial color="#065f46" transparent opacity={nearStore ? 0.6 : 0.35} />
+        </mesh>
+        <sprite position={[0, 4.2, 0]} scale={[2.8, 2.8, 1]}>
+          <spriteMaterial map={eatTex} />
+        </sprite>
+      </group>
+    </group>
+  )
+}
+
 function Buildings({ targetId }) {
   return (
     <group>
       {buildings.map((b) => {
+        if (b.store) return null // 편의점은 Store 컴포넌트가 그림
         const isTarget = b.id === targetId
         return (
           <group key={b.id} position={[b.x, 0, b.z]}>
@@ -249,7 +322,7 @@ export function TargetMarkers({ target, bay, nearBay, mapView }) {
   )
 }
 
-export default function CityWorld({ targetId }) {
+export default function CityWorld({ targetId, nearStore }) {
   return (
     <group>
       {/* 대지 */}
@@ -271,6 +344,7 @@ export default function CityWorld({ targetId }) {
       <Train />
       <Station />
       <Buildings targetId={targetId} />
+      <Store nearStore={nearStore} />
       {trees.map((t, i) => (
         <group key={i} position={[t.x, 0, t.z]} scale={t.s}>
           <mesh position={[0, 1, 0]}>

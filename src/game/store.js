@@ -8,6 +8,13 @@ export const FINE_AMOUNT = 121      // 주차 위반 벌금 (AUD)
 export const DAILY_COST = 45        // 하루 생활비 (셰어하우스 + 밥)
 export const START_MONEY = 80
 
+export const MEAL_COST = 14         // 편의점 한 끼 가격 (AUD)
+
+// 워홀 생존 스탯 (0~100)
+// 포만감은 낮을수록 배고픔(나쁨), 외로움은 높을수록 나쁨, 영어스킬/힘은 높을수록 좋음
+export const START_STATS = { fullness: 80, loneliness: 30, english: 15, strength: 25 }
+const clampStat = (v) => Math.max(0, Math.min(100, v))
+
 // scene: city | signSelect | building | result | cards | dayEnd | gameover
 export const useGame = create((set, get) => ({
   scene: 'cards',
@@ -28,18 +35,46 @@ export const useGame = create((set, get) => ({
   allowedUntil: null,        // 이 시각 넘기면 벌금 (불가능 표지판이면 parkedAt과 동일)
   result: null,              // { type: 'pay'|'fine', amount, overMinutes }
   joystick: { x: 0, y: 0 },  // -1..1, UI 조이스틱 → 씬이 읽음
+  stats: { ...START_STATS },
+  statFx: null,              // { id, items: [{ label, delta, color }] } — 캐릭터 옆 플로팅 표시
 
   setJoystick: (v) => set({ joystick: v }),
 
   // 시간 진행 (씬의 rAF 루프에서 호출)
   tick: (gameMinutes) => {
-    const { clock, scene } = get()
+    const { clock, scene, stats } = get()
     const next = clock + gameMinutes
+    // 시간이 흐르면 점점 배고파진다 (하루 풀타임 기준 포만감 약 -40)
+    const fullness = clampStat(stats.fullness - gameMinutes * 0.05)
     if (next >= DAY_END && scene !== 'building') {
-      set({ clock: DAY_END, scene: 'dayEnd' })
+      set({ clock: DAY_END, scene: 'dayEnd', stats: { ...stats, fullness } })
       return
     }
-    set({ clock: next })
+    set({ clock: next, stats: { ...stats, fullness } })
+  },
+
+  // 편의점 앞에서 밥먹기: 돈 내고 포만감 회복 + 점원과 스몰토크
+  eatMeal: () => {
+    const { money, stats } = get()
+    if (money < MEAL_COST) return
+    set({
+      money: money - MEAL_COST,
+      stats: {
+        ...stats,
+        fullness: clampStat(stats.fullness + 45),
+        loneliness: clampStat(stats.loneliness - 2),
+        english: clampStat(stats.english + 1),
+      },
+      statFx: {
+        id: Date.now(),
+        items: [
+          { label: '포만감', delta: +45, color: '#fdba74' },
+          { label: '외로움', delta: -2, color: '#d8b4fe' },
+          { label: '영어', delta: +1, color: '#7dd3fc' },
+          { label: `-$${MEAL_COST}`, color: '#fca5a5' },
+        ],
+      },
+    })
   },
 
   chooseJob: (job) => {
@@ -69,10 +104,18 @@ export const useGame = create((set, get) => ({
 
   // 건물에서 배달 완료하고 나옴
   exitBuilding: () => {
-    const { clock, allowedUntil, money, job, deliveries, fines } = get()
+    const { clock, allowedUntil, money, job, deliveries, fines, stats } = get()
+    // 배달 = 손님과 대화(영어↑, 외로움↓) + 계단 오르내리기(힘↑)
+    const grown = {
+      ...stats,
+      english: clampStat(stats.english + 2),
+      strength: clampStat(stats.strength + 1),
+      loneliness: clampStat(stats.loneliness - 4),
+    }
     const over = clock - allowedUntil
     if (over > 0) {
       set({
+        stats: grown,
         money: money - FINE_AMOUNT,
         fines: fines + 1,
         deliveries: deliveries + 1,
@@ -82,6 +125,7 @@ export const useGame = create((set, get) => ({
       })
     } else {
       set({
+        stats: grown,
         money: money + job.pay,
         deliveries: deliveries + 1,
         result: { type: 'pay', amount: job.pay },
@@ -113,13 +157,19 @@ export const useGame = create((set, get) => ({
 
   // 하루 종료 → 생활비 정산 → 다음 날
   nextDay: () => {
-    const { money, day, dayIdx } = get()
+    const { money, day, dayIdx, stats } = get()
     const after = money - DAILY_COST
     if (after <= 0) {
       set({ money: after, scene: 'gameover' })
       return
     }
     set({
+      // 집에서 저녁을 먹어 포만감 회복, 타지에서 혼자 보내는 밤은 외로움을 키운다
+      stats: {
+        ...stats,
+        fullness: clampStat(stats.fullness + 60),
+        loneliness: clampStat(stats.loneliness + 8),
+      },
       money: after,
       day: day + 1,
       dayIdx: (dayIdx + 1) % 7,
@@ -150,6 +200,8 @@ export const useGame = create((set, get) => ({
       parkedAt: null,
       allowedUntil: null,
       result: null,
+      stats: { ...START_STATS },
+      statFx: null,
     }),
 }))
 

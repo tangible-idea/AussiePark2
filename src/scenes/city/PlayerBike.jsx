@@ -3,16 +3,17 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame } from '../../game/store'
 import { MINUTES_PER_SECOND } from '../../game/time'
-import { buildings, MAP_EXTENT, SPAWN } from '../../game/mapData'
+import { buildings, MAP_EXTENT, SPAWN, STORE_BAY } from '../../game/mapData'
 import Character, { EBike } from '../shared/Character'
 
 const SPEED = 17
 const PARK_DIST = 5.5
+const EAT_DIST = 5
 const PLAYER_R = 1.3
 
-// 조이스틱 주행 + 카메라 팔로우 + 주차 베이 판정
+// 조이스틱 주행 + 카메라 팔로우 + 주차 베이/편의점 판정
 // mapView면 플레이어~목적지가 다 보이게 줌아웃
-export default function PlayerBike({ bay, onNearBay, mapView }) {
+export default function PlayerBike({ bay, onNearBay, onNearStore, mapView }) {
   const group = useRef()
   // 테스트용: ?spawnbay 이면 주차 베이 옆에서 시작
   const atBay = import.meta.env.DEV && new URLSearchParams(location.search).has('spawnbay')
@@ -22,6 +23,7 @@ export default function PlayerBike({ bay, onNearBay, mapView }) {
   const lookAt = useRef(new THREE.Vector3(SPAWN.x, 0, SPAWN.z))
   const speedRef = useRef(0)
   const wasNear = useRef(false)
+  const wasNearStore = useRef(false)
   const camera = useThree((s) => s.camera)
 
   useFrame((_, rawDt) => {
@@ -65,6 +67,13 @@ export default function PlayerBike({ bay, onNearBay, mapView }) {
       if (near !== wasNear.current) {
         wasNear.current = near
         onNearBay(near)
+      }
+      // 편의점 앞 식사 지점 판정
+      const nearStore =
+        Math.hypot(pos.current.x - STORE_BAY.x, pos.current.z - STORE_BAY.z) < EAT_DIST
+      if (nearStore !== wasNearStore.current) {
+        wasNearStore.current = nearStore
+        onNearStore(nearStore)
       }
     } else {
       speedRef.current = 0

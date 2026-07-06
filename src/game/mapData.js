@@ -139,11 +139,28 @@ for (let gx = -MAP_EXTENT + 15; gx <= MAP_EXTENT - 15; gx += 19) {
   }
 }
 
-// 배달 목적지 후보: 티어별 거리 밴드 (SPAWN 기준)
+// ─── 편의점 (밥 먹는 곳) ───
+// 광장 남쪽 The Boulevarde 서쪽 도로변. 앞 도로에 서면 밥먹기 버튼이 뜬다.
+export const STORE = { x: -72, z: 70, w: 11, d: 9, h: 5.5 }
+
+// 편의점 자리와 겹치는 자동 생성 건물 제거 후 충돌용으로 등록
+for (let i = buildings.length - 1; i >= 0; i--) {
+  const b = buildings[i]
+  if (
+    Math.abs(b.x - STORE.x) < (b.w + STORE.w) / 2 + 3 &&
+    Math.abs(b.z - STORE.z) < (b.d + STORE.d) / 2 + 3
+  ) {
+    buildings.splice(i, 1)
+  }
+}
+buildings.push({ id: 'store', ...STORE, color: 0x2fa84f, roof: 0xe8ecef, commercial: true, store: true })
+
+// 배달 목적지 후보: 티어별 거리 밴드 (SPAWN 기준, 편의점 제외)
 export function pickTarget(distanceTier) {
   const bands = { 1: [55, 115], 2: [115, 180], 3: [180, 300] }
   const [lo, hi] = bands[distanceTier] || bands[2]
   const pool = buildings.filter((b) => {
+    if (b.store) return false
     const d = Math.hypot(b.x - SPAWN.x, b.z - SPAWN.z)
     return d >= lo && d < hi
   })
@@ -163,3 +180,6 @@ export function bayFor(building) {
     angle: Math.atan2(dx, dz),
   }
 }
+
+// 편의점 앞 도로변 식사 지점
+export const STORE_BAY = bayFor(STORE)
