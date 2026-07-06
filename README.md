@@ -1,47 +1,57 @@
-# Australian Parking Quiz - React
+# Deliverider — 워홀 배달 생존기
 
-호주 주차 표지판 퀴즈 게임을 React로 구현한 프로젝트입니다.
+호주 워킹홀리데이에서 전기자전거 배달기사로 살아남는 생존 로그라이크 게임.
 
-## 설치 및 실행
+## 게임 루프
+
+1. **배달 콜 카드 3장** 중 하나 선택 (가까움/보통/멀리 — 멀수록 배달비↑)
+2. **탑다운 3D 도시**(GTA2 스타일)를 왼쪽 조이스틱으로 주행 (데스크톱: WASD/방향키)
+3. 목적지 옆 **파란 주차 베이**에 자전거를 대면 오른쪽 액션 버튼이 `주차`로 바뀜
+4. **호주식 주차 표지판 3택** — 랜덤이지만 항상 아래 구성:
+   - 1개는 지금 주차 **불가능** (요일/시간대가 안 맞음)
+   - 1개는 **빠듯함** (40~70분)
+   - 1개는 **널널함** (2시간 이상)
+5. **건물 내부(2~4층) 횡스크롤** — 계단을 오르내리며 호수를 찾아 배달
+6. 나왔을 때 주차 허용 시간을 넘겼으면 **벌금 $121**
+7. 밤 10시가 되면 하루 종료, **생활비 $45** 차감 — 잔고가 바닥나면 귀국행 ✈️
+
+파킹사인 규칙은 `public/signs/1000026986.png` 등 실제 호주 표지판을 참조했다.
+
+## 실행
 
 ```bash
-# 의존성 설치
 npm install
-
-# 개발 서버 실행
-npm run dev
-
-# 프로덕션 빌드
-npm run build
-
-# 빌드 미리보기
-npm run preview
+npm run dev      # 개발 서버
+npm run build    # 프로덕션 빌드
 ```
 
-## 기술 스택
-
-- **React 18** - UI 라이브러리
-- **Vite** - 빌드 도구
-- **Tailwind CSS** - 스타일링
-- **Material Icons** - 아이콘
-
-## 프로젝트 구조
+## 구조
 
 ```
 src/
-  ├── components/
-  │   ├── Navbar.jsx          # 상단 네비게이션 바
-  │   ├── ScenarioCard.jsx    # 시나리오 카드
-  │   ├── ParkingSign.jsx     # 주차 표지판 컴포넌트
-  │   └── ParkingSpot.jsx     # 주차 공간 버튼
-  ├── App.jsx                 # 메인 앱 컴포넌트
-  ├── main.jsx                # 진입점
-  └── index.css               # 글로벌 스타일
+├── game/
+│   ├── store.js     # zustand 게임 상태 머신 (씬 전환/돈/시간/벌금)
+│   ├── mapData.js   # Strathfield 스타일 도로 그래프 + 건물/주차베이 배치
+│   ├── signs.js     # 표지판 생성 (불가능/빠듯/널널) + 허용시간 계산
+│   ├── jobs.js      # 배달 카드 생성
+│   └── time.js      # 게임 시계 (1실제초 = 1게임분)
+├── scenes/
+│   ├── city/        # R3F 탑다운 도시: 도로망/철로/역/열차/NPC 차량·행인/플레이어
+│   ├── building/    # R3F 커터웨이 아파트: 전 층 한눈에 + 물리적 계단 등반
+│   └── shared/      # 치비 캐릭터/전기자전거 모델, 캔버스 텍스트 텍스처
+└── ui/
+    ├── AussieSign.jsx    # 호주식 표지판 렌더러
+    ├── Joystick.jsx      # 가상 조이스틱 (+ WASD)
+    ├── ActionButton.jsx  # 컨텍스트 액션 버튼
+    ├── HUD.jsx           # 시간/돈/남은 주차시간
+    ├── SignSelect.jsx / JobCards.jsx / Modals.jsx
+    └── ...
 ```
 
-## 특징
+도시 맵은 `public/map/strathfield.png`를 참조해 대각선 철로·역·사선 간선도로·북동쪽
+격자 주택가를 그래프로 옮긴 것. NPC 차량/행인은 이 도로 그래프를 랜덤워크한다.
 
-- 반응형 디자인
-- 다크 모드 지원
-- 재사용 가능한 컴포넌트 구조
-- 모던 UI/UX
+개발용 치트: `?auto=city|building`(씬 자동 진입), `?spawnbay`(주차베이 옆 스폰),
+`window.__game`(zustand 스토어 접근). 모두 dev 빌드에서만 동작.
+
+기술 스택: React 18 + Vite + Tailwind + React Three Fiber + zustand

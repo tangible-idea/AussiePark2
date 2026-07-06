@@ -1,9 +1,18 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Australian Parking Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#020617" />
+    <title>Deliverider — 워홀 배달 생존기</title>
+    <script>
+      // 테스트용: ?rafshim 이면 백그라운드 탭에서도 프레임이 돌도록 rAF를 타이머로 대체
+      if (new URLSearchParams(location.search).has('rafshim')) {
+        window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 33)
+        window.cancelAnimationFrame = clearTimeout
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
