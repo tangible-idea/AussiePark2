@@ -49,7 +49,7 @@ export default function BuildingScene() {
 
       <Joystick />
       <ActionButton
-        icon={action === 'deliver' ? '📦' : '🚪'}
+        icon={action === 'deliver' ? 'box' : 'door'}
         label={action === 'deliver' ? '배달하기' : action === 'exit' ? '나가기' : null}
         onClick={doAction}
       />

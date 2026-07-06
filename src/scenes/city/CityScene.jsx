@@ -46,9 +46,10 @@ export default function CityScene() {
         <PlayerBike bay={bay} onNearBay={handleNearBay} mapView={mapView} />
       </Canvas>
 
-      <Joystick />
+      {/* 지도(줌아웃) 모드에서는 조이스틱 숨김 + 이동 불가 */}
+      {!mapView && <Joystick />}
       <ActionButton
-        icon={canPark ? '🅿️' : mapView ? '↩️' : '🗺️'}
+        icon={canPark ? 'park' : mapView ? 'close' : 'map'}
         label={canPark ? '주차' : mapView ? '닫기' : '지도'}
         variant={canPark ? 'primary' : 'map'}
         onClick={canPark ? openSignSelect : () => setMapView((v) => !v)}

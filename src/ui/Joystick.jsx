@@ -86,6 +86,8 @@ export default function Joystick() {
     return () => {
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
+      // 드래그/키 입력 중 언마운트되면 입력값이 남지 않게 리셋
+      setJoystick({ x: 0, y: 0 })
     }
   }, [setJoystick])
 

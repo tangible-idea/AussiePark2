@@ -30,7 +30,8 @@ export default function PlayerBike({ bay, onNearBay, mapView }) {
     if (state.scene === 'city') {
       state.tick(dt * MINUTES_PER_SECOND)
 
-      const { x: jx, y: jy } = state.joystick
+      // 지도 모드에서는 이동 잠금
+      const { x: jx, y: jy } = mapView ? { x: 0, y: 0 } : state.joystick
       const mag = Math.min(1, Math.hypot(jx, jy))
       speedRef.current = mag
       if (mag > 0.15) {
