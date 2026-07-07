@@ -183,3 +183,35 @@ export function bayFor(building) {
 
 // 편의점 앞 도로변 식사 지점
 export const STORE_BAY = bayFor(STORE)
+
+// ─── 호주 길거리 장식 (모듈 로드 시 1회 생성) ───
+// 나무 일부는 자카란다(보라 캐노피)로
+for (const t of trees) t.jac = srand() < 0.3
+
+// 도로변 소품: 휠리빈 / 호주우체국 우체통 / 버스정류장
+export const props = []
+{
+  const avoid = [SPAWN, STATION, STORE, STORE_BAY]
+  for (const [a, b] of edges) {
+    const [ax, az] = nodes[a]
+    const [bx, bz] = nodes[b]
+    const len = Math.hypot(bx - ax, bz - az)
+    const dx = (bx - ax) / len
+    const dz = (bz - az) / len
+    const count = len > 100 ? 2 : 1
+    for (let i = 0; i < count; i++) {
+      if (srand() < 0.3) continue
+      const t = 0.2 + srand() * 0.6
+      const side = srand() < 0.5 ? 1 : -1
+      const off = ROAD_W / 2 + 2.2
+      const x = ax + (bx - ax) * t - dz * off * side
+      const z = az + (bz - az) * t + dx * off * side
+      if (avoid.some((p) => Math.hypot(x - p.x, z - p.z) < 14)) continue
+      if (distToRail(x, z) < RAIL_W / 2 + 4) continue
+      const r = srand()
+      const type = r < 0.45 ? 'bin' : r < 0.75 ? 'mailbox' : 'busstop'
+      // 도로 쪽을 바라보게
+      props.push({ x, z, type, angle: Math.atan2(dz * side, -dx * side) })
+    }
+  }
+}

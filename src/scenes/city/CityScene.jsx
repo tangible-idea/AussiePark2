@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { useGame, MEAL_COST } from '../../game/store'
 import CityWorld, { TargetMarkers } from './CityWorld'
 import Traffic from './Traffic'
+import IbisFlock from './Ibis'
 import PlayerBike from './PlayerBike'
 import Joystick from '../../ui/Joystick'
 import ActionButton from '../../ui/ActionButton'
@@ -46,6 +47,7 @@ export default function CityScene() {
         <directionalLight position={[60, 100, 30]} intensity={1.15} color="#fff2d9" />
         <CityWorld targetId={target.id} nearStore={canEat} />
         <Traffic />
+        <IbisFlock />
         <TargetMarkers target={target} bay={bay} nearBay={canPark} mapView={mapView} />
         <PlayerBike bay={bay} onNearBay={handleNearBay} onNearStore={setCanEat} mapView={mapView} />
       </Canvas>

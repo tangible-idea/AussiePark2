@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import {
   nodes, edges, rail, RAIL_W, ROAD_W, MAP_EXTENT,
-  buildings, trees, STATION, STORE, STORE_BAY,
+  buildings, trees, STATION, STORE, STORE_BAY, props,
 } from '../../game/mapData'
 import { textTexture } from '../shared/textTexture'
 
@@ -152,6 +152,115 @@ function Station() {
         <planeGeometry args={[16, 3]} />
         <meshBasicMaterial map={labelTex} side={THREE.DoubleSide} transparent />
       </mesh>
+    </group>
+  )
+}
+
+// ─── 호주 길거리 소품 ───
+
+// 호주우체국 빨간 우체통 (필러 박스)
+function Mailbox() {
+  return (
+    <group>
+      <mesh position={[0, 0.65, 0]}>
+        <cylinderGeometry args={[0.34, 0.38, 1.3, 10]} />
+        <meshLambertMaterial color="#dc2626" />
+      </mesh>
+      <mesh position={[0, 1.32, 0]}>
+        <sphereGeometry args={[0.34, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshLambertMaterial color="#b91c1c" />
+      </mesh>
+      {/* 투입구 */}
+      <mesh position={[0, 1.05, 0.33]}>
+        <boxGeometry args={[0.4, 0.06, 0.1]} />
+        <meshLambertMaterial color="#450a0a" />
+      </mesh>
+    </group>
+  )
+}
+
+// 카운슬 휠리빈 2개 (빨강/노랑 뚜껑)
+function WheelieBins() {
+  return (
+    <group>
+      {[
+        [-0.45, '#c23b3b'],
+        [0.45, '#d9b23e'],
+      ].map(([x, lid], i) => (
+        <group key={i} position={[x, 0, 0]} rotation={[0, (i ? -1 : 1) * 0.12, 0]}>
+          <mesh position={[0, 0.5, 0]}>
+            <boxGeometry args={[0.62, 0.9, 0.58]} />
+            <meshLambertMaterial color="#31473b" />
+          </mesh>
+          <mesh position={[0, 0.98, -0.02]}>
+            <boxGeometry args={[0.66, 0.09, 0.64]} />
+            <meshLambertMaterial color={lid} />
+          </mesh>
+          {/* 손잡이 */}
+          <mesh position={[0, 1.02, -0.36]}>
+            <boxGeometry args={[0.5, 0.05, 0.08]} />
+            <meshLambertMaterial color="#1f2a24" />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// 버스정류장 쉘터 + BUS 표지판
+function BusStop({ signTex }) {
+  return (
+    <group>
+      {/* 기둥 2개 + 지붕 */}
+      {[-1.8, 1.8].map((x) => (
+        <mesh key={x} position={[x, 1.2, -0.6]}>
+          <cylinderGeometry args={[0.06, 0.06, 2.4, 6]} />
+          <meshLambertMaterial color="#5b6570" />
+        </mesh>
+      ))}
+      <mesh position={[0, 2.45, -0.15]} rotation={[0.08, 0, 0]}>
+        <boxGeometry args={[4.4, 0.12, 1.7]} />
+        <meshLambertMaterial color="#e8641b" />
+      </mesh>
+      {/* 등판 (반투명 유리) */}
+      <mesh position={[0, 1.35, -0.85]}>
+        <planeGeometry args={[4.2, 1.9]} />
+        <meshLambertMaterial color="#aee3ef" transparent opacity={0.45} side={THREE.DoubleSide} />
+      </mesh>
+      {/* 벤치 */}
+      <mesh position={[0, 0.55, -0.45]}>
+        <boxGeometry args={[3.4, 0.1, 0.45]} />
+        <meshLambertMaterial color="#8a6a4a" />
+      </mesh>
+      {/* BUS 표지판 */}
+      <group position={[2.4, 0, 0.3]}>
+        <mesh position={[0, 1.3, 0]}>
+          <cylinderGeometry args={[0.045, 0.045, 2.6, 6]} />
+          <meshLambertMaterial color="#5b6570" />
+        </mesh>
+        <mesh position={[0, 2.5, 0]}>
+          <planeGeometry args={[0.8, 0.8]} />
+          <meshBasicMaterial map={signTex} side={THREE.DoubleSide} />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
+function StreetProps() {
+  const busTex = useMemo(
+    () => textTexture('BUS', { fg: '#0f172a', bg: '#f2c40f', font: 'bold 60px Arial', w: 128, h: 128 }),
+    []
+  )
+  return (
+    <group>
+      {props.map((p, i) => (
+        <group key={i} position={[p.x, 0, p.z]} rotation={[0, p.angle, 0]}>
+          {p.type === 'mailbox' && <Mailbox />}
+          {p.type === 'bin' && <WheelieBins />}
+          {p.type === 'busstop' && <BusStop signTex={busTex} />}
+        </group>
+      ))}
     </group>
   )
 }
@@ -345,16 +454,25 @@ export default function CityWorld({ targetId, nearStore }) {
       <Station />
       <Buildings targetId={targetId} />
       <Store nearStore={nearStore} />
+      <StreetProps />
+      {/* 나무: 일부는 시드니 명물 자카란다 (보라 캐노피) */}
       {trees.map((t, i) => (
         <group key={i} position={[t.x, 0, t.z]} scale={t.s}>
           <mesh position={[0, 1, 0]}>
             <cylinderGeometry args={[0.35, 0.45, 2, 6]} />
-            <meshLambertMaterial color="#8a6a4a" />
+            <meshLambertMaterial color={t.jac ? '#6b5a48' : '#8a6a4a'} />
           </mesh>
-          <mesh position={[0, 3.2, 0]}>
+          <mesh position={[0, 3.2, 0]} scale={t.jac ? [1.15, 0.9, 1.15] : [1, 1, 1]}>
             <sphereGeometry args={[2, 10, 8]} />
-            <meshLambertMaterial color="#7aa864" />
+            <meshLambertMaterial color={t.jac ? '#a98bd6' : '#7aa864'} />
           </mesh>
+          {/* 자카란다: 떨어진 꽃잎 카펫 */}
+          {t.jac && (
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+              <circleGeometry args={[2.6, 12]} />
+              <meshLambertMaterial color="#c3aee6" transparent opacity={0.55} />
+            </mesh>
+          )}
         </group>
       ))}
     </group>

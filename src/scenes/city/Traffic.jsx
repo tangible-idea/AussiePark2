@@ -1,6 +1,7 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { nodes, neighbors, ROAD_W } from '../../game/mapData'
+import { registerBody } from '../../game/physics'
 import Character from '../shared/Character'
 
 // 도로 그래프를 랜덤워크하는 NPC들 (차량 + 보행자)
@@ -51,8 +52,12 @@ const CAR_COLORS = ['#e05252', '#4a80d9', '#e8b93e', '#5aa86e', '#c9cdd4', '#8a5
 
 function Car({ walker, color }) {
   const ref = useRef()
+  const body = useRef({ kind: 'car', r: 2.4, x: 0, z: 0 }).current
+  useEffect(() => registerBody(body), [body])
   useFrame((_, dt) => {
     const p = stepWalker(walker, Math.min(dt, 0.1))
+    body.x = p.x
+    body.z = p.z
     if (!ref.current) return
     ref.current.position.set(p.x, 0, p.z)
     ref.current.rotation.y = p.heading
@@ -98,10 +103,31 @@ const PED_CAPS = ['#37415c', '#a83232', '#3c8a5e', '#e8e4d8', '#4a4f57']
 function Pedestrian({ walker, jacket, cap }) {
   const ref = useRef()
   const speedRef = useRef(1)
-  useFrame((_, dt) => {
-    const p = stepWalker(walker, Math.min(dt, 0.1))
+  // 부딪히면 밀려났다가 (disp) 서서히 제 경로로 복귀
+  const disp = useRef({ x: 0, z: 0 }).current
+  const body = useRef({
+    kind: 'ped',
+    r: 0.8,
+    x: 0,
+    z: 0,
+    hit: (nx, nz, f) => {
+      disp.x += nx * f * 0.3
+      disp.z += nz * f * 0.3
+    },
+  }).current
+  useEffect(() => registerBody(body), [body])
+  useFrame((_, rawDt) => {
+    const dt = Math.min(rawDt, 0.1)
+    const p = stepWalker(walker, dt)
+    const k = Math.exp(-dt * 1.6)
+    disp.x *= k
+    disp.z *= k
+    const x = p.x + disp.x
+    const z = p.z + disp.z
+    body.x = x
+    body.z = z
     if (!ref.current) return
-    ref.current.position.set(p.x, 0, p.z)
+    ref.current.position.set(x, 0, z)
     ref.current.rotation.y = p.heading
   })
   return (

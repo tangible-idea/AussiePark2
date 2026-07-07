@@ -1,15 +1,21 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame } from '../../game/store'
 import { MINUTES_PER_SECOND } from '../../game/time'
 import { buildings, MAP_EXTENT, SPAWN, STORE_BAY } from '../../game/mapData'
+import { registerBody, forEachHit } from '../../game/physics'
 import Character, { EBike } from '../shared/Character'
 
 const SPEED = 17
 const PARK_DIST = 5.5
 const EAT_DIST = 5
 const PLAYER_R = 1.3
+
+const hitWall = (x, z) =>
+  buildings.some(
+    (b) => Math.abs(x - b.x) < b.w / 2 + PLAYER_R && Math.abs(z - b.z) < b.d / 2 + PLAYER_R
+  )
 
 // 조이스틱 주행 + 카메라 팔로우 + 주차 베이/편의점 판정
 // mapView면 플레이어~목적지가 다 보이게 줌아웃
@@ -25,6 +31,10 @@ export default function PlayerBike({ bay, onNearBay, onNearStore, mapView }) {
   const wasNear = useRef(false)
   const wasNearStore = useRef(false)
   const camera = useThree((s) => s.camera)
+  // 아케이드 충돌: 원 콜라이더 + 넉백 속도
+  const body = useRef({ kind: 'player', r: PLAYER_R, x: pos.current.x, z: pos.current.z }).current
+  const knockback = useRef({ x: 0, z: 0 })
+  useEffect(() => registerBody(body), [body])
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1)
@@ -41,14 +51,8 @@ export default function PlayerBike({ bay, onNearBay, onNearStore, mapView }) {
         const nx = p.x + jx * SPEED * dt
         const nz = p.z + jy * SPEED * dt
         // 건물 충돌: 축 분리로 벽 따라 미끄러지기
-        const hit = (x, z) =>
-          buildings.some(
-            (b) =>
-              Math.abs(x - b.x) < b.w / 2 + PLAYER_R &&
-              Math.abs(z - b.z) < b.d / 2 + PLAYER_R
-          )
-        if (!hit(nx, p.z)) p.x = nx
-        if (!hit(p.x, nz)) p.z = nz
+        if (!hitWall(nx, p.z)) p.x = nx
+        if (!hitWall(p.x, nz)) p.z = nz
         p.x = THREE.MathUtils.clamp(p.x, -MAP_EXTENT, MAP_EXTENT)
         p.z = THREE.MathUtils.clamp(p.z, -MAP_EXTENT, MAP_EXTENT)
 
@@ -74,6 +78,49 @@ export default function PlayerBike({ bay, onNearBay, onNearStore, mapView }) {
       if (nearStore !== wasNearStore.current) {
         wasNearStore.current = nearStore
         onNearStore(nearStore)
+      }
+
+      // ── 아케이드 충돌 반응 ──
+      const p = pos.current
+      body.x = p.x
+      body.z = p.z
+      forEachHit(body, (b, nx, nz, overlap) => {
+        if (b.kind === 'car') {
+          // 차에 받히면 크게 튕겨나감
+          knockback.current.x += nx * 13
+          knockback.current.z += nz * 13
+        } else if (b.kind === 'ped') {
+          // 보행자와는 서로 가볍게 밀침
+          knockback.current.x += nx * 2.5
+          knockback.current.z += nz * 2.5
+          b.hit?.(-nx, -nz, 4)
+        } else if (b.kind === 'ibis') {
+          // 새는 파닥이며 튕겨나가고 나는 거의 안 흔들림
+          b.hit?.(-nx, -nz, 10)
+        }
+        // 겹침 해소 (벽 뚫기 방지)
+        if (b.kind !== 'ibis') {
+          const sx = nx * overlap
+          const sz = nz * overlap
+          if (!hitWall(p.x + sx, p.z)) p.x += sx
+          if (!hitWall(p.x, p.z + sz)) p.z += sz
+        }
+      })
+      // 넉백 적용 + 감쇠
+      const kb = knockback.current
+      if (Math.hypot(kb.x, kb.z) > 0.05) {
+        const kx = kb.x * dt
+        const kz = kb.z * dt
+        if (!hitWall(p.x + kx, p.z)) p.x += kx
+        if (!hitWall(p.x, p.z + kz)) p.z += kz
+        p.x = THREE.MathUtils.clamp(p.x, -MAP_EXTENT, MAP_EXTENT)
+        p.z = THREE.MathUtils.clamp(p.z, -MAP_EXTENT, MAP_EXTENT)
+        const k = Math.exp(-dt * 2.5)
+        kb.x *= k
+        kb.z *= k
+      } else {
+        kb.x = 0
+        kb.z = 0
       }
     } else {
       speedRef.current = 0
