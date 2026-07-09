@@ -6,8 +6,11 @@ const chip =
 
 // 상단 HUD: 날짜/시간/돈 + (주차 중이면) 남은 주차시간
 export default function HUD() {
-  const { day, dayIdx, clock, money, deliveries, scene, allowedUntil, job } = useGame()
+  const { day, dayIdx, clock, money, deliveries, scene, allowedUntil, job, phase, shop, deliverBy } = useGame()
   const parkingLeft = scene === 'building' && allowedUntil != null ? allowedUntil - clock : null
+  const deliverLeft = job && deliverBy != null && (scene === 'city' || scene === 'building' || scene === 'signSelect')
+    ? deliverBy - clock
+    : null
 
   return (
     <div className="absolute top-0 inset-x-0 z-40 pointer-events-none font-display">
@@ -33,8 +36,28 @@ export default function HUD() {
       {job && scene === 'city' && (
         <div className="flex justify-center">
           <div className="bg-slate-950/70 border border-amber-400/40 backdrop-blur-md rounded-full px-5 py-1.5 text-sm text-white shadow-lg shadow-black/30">
-            📦 {job.street} <span className="font-extrabold text-amber-300">{job.unit}호</span>
+            {phase === 'pickup' ? (
+              <>🍜 <span className="font-extrabold text-teal-300">{job.shop.slice(job.shop.indexOf(' ') + 1)}</span>에서 픽업</>
+            ) : (
+              <>📦 {job.street} <span className="font-extrabold text-amber-300">{job.unit}호</span></>
+            )}
             <span className="text-emerald-300 font-bold ml-2">${job.pay}</span>
+          </div>
+        </div>
+      )}
+
+      {deliverLeft != null && (
+        <div className="flex justify-center mt-1.5">
+          <div
+            className={`rounded-full px-4 py-1 text-xs font-extrabold backdrop-blur-md border shadow-lg shadow-black/30 ${
+              deliverLeft <= 0
+                ? 'bg-red-600/90 border-red-300/50 text-white'
+                : deliverLeft < 12
+                  ? 'bg-orange-500/90 border-orange-200/50 text-white animate-pulse'
+                  : 'bg-slate-950/60 border-white/15 text-white/80'
+            }`}
+          >
+            {deliverLeft <= 0 ? '⏰ 지각! 배달비 50%' : `⏱ 배달 제한 ${formatDuration(deliverLeft)}`}
           </div>
         </div>
       )}

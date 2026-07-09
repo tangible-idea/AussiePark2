@@ -56,8 +56,8 @@ const doorX = (k) => 16 + k * 6.8 // k: 0..5
 const WALL_COLORS = ['#cfd8cd', '#d8cfd0', '#cdd3d8'] // 2,3,4층 벽지
 const UNITS = 6
 
-function Stairs({ from, to }) {
-  // from/to: [x, y] — 계단 스텝 박스들
+function Stairs({ from, to, label }) {
+  // from/to: [x, y] — 계단 스텝 박스들 (밝은 나무색으로 눈에 띄게)
   const steps = 9
   const items = []
   for (let i = 0; i < steps; i++) {
@@ -66,23 +66,30 @@ function Stairs({ from, to }) {
     const y = from[1] + (to[1] - from[1]) * t
     items.push(
       <mesh key={i} position={[x, y - 0.25, 0.8]}>
-        <boxGeometry args={[Math.abs(to[0] - from[0]) / steps + 0.5, 0.5, 3.2]} />
-        <meshStandardMaterial color="#a8977f" roughness={0.9} />
+        <boxGeometry args={[Math.abs(to[0] - from[0]) / steps + 0.5, 0.5, 3.4]} />
+        <meshStandardMaterial color="#d9b370" roughness={0.85} />
       </mesh>
     )
   }
-  // 난간
   const cx = (from[0] + to[0]) / 2
   const cy = (from[1] + to[1]) / 2
   const len = Math.hypot(to[0] - from[0], to[1] - from[1])
   const ang = Math.atan2(to[1] - from[1], to[0] - from[0])
+  const labelTex = textTexture(label, {
+    fg: '#1f2937', bg: '#fbbf24', font: 'bold 56px Arial', w: 192, h: 80,
+  })
   return (
     <group>
       {items}
-      <mesh position={[cx, cy + 1.1, 2.3]} rotation={[0, 0, ang]}>
+      {/* 난간 */}
+      <mesh position={[cx, cy + 1.1, 2.5]} rotation={[0, 0, ang]}>
         <boxGeometry args={[len, 0.18, 0.18]} />
         <meshStandardMaterial color="#6b7280" roughness={0.6} />
       </mesh>
+      {/* 계단 표지판 */}
+      <sprite position={[cx, cy + 3.6, 1]} scale={[4.6, 1.9, 1]}>
+        <spriteMaterial map={labelTex} />
+      </sprite>
     </group>
   )
 }
@@ -205,9 +212,9 @@ function Shell({ targetFloorY }) {
         </group>
       ))}
       {/* 계단 3개 */}
-      <Stairs from={[52, 0]} to={[63, FLOOR_H]} />
-      <Stairs from={[11, FLOOR_H]} to={[1, FLOOR_H * 2]} />
-      <Stairs from={[53, FLOOR_H * 2]} to={[63, FLOOR_H * 3]} />
+      <Stairs from={[52, 0]} to={[63, FLOOR_H]} label="↑ 2F" />
+      <Stairs from={[11, FLOOR_H]} to={[1, FLOOR_H * 2]} label="↑ 3F" />
+      <Stairs from={[53, FLOOR_H * 2]} to={[63, FLOOR_H * 3]} label="↑ 4F" />
       {/* 목적지 층 은은한 하이라이트 */}
       {targetFloorY != null && (
         <mesh position={[BLD_W / 2, targetFloorY + FLOOR_H / 2, -2.55]}>
@@ -219,14 +226,24 @@ function Shell({ targetFloorY }) {
   )
 }
 
-export default function BuildingWorld({ delivered, onAction }) {
+// 층별 계단 중간점: STAIR_MID[f] = f층 → f+1층 계단의 중앙 [x, y]
+const STAIR_MID = [
+  [57.5, FLOOR_H / 2],
+  [6, FLOOR_H * 1.5],
+  [58, FLOOR_H * 2.5],
+]
+
+export default function BuildingWorld({ delivered, onAction, onFloor }) {
   const job = useGame((s) => s.job)
   const sRef = useRef(2)               // 경로 파라미터
   const facing = useRef(1)
   const speedRef = useRef(0)
   const lastAction = useRef(null)
+  const lastFloor = useRef(0)
   const player = useRef()
+  const guide = useRef()
   const camera = useThree((s) => s.camera)
+  const size = useThree((s) => s.size)
 
   const targetUnitIdx = (job.unit % 100) - 1
   const targetFloorY = (job.floor - 1) * FLOOR_H
@@ -255,10 +272,10 @@ export default function BuildingWorld({ delivered, onAction }) {
     }
 
     // 가능한 액션 판정
-    const onFloor = !p.stair
+    const onFloorNow = !p.stair
     const floorIdx = Math.round(p.y / FLOOR_H) // 0=로비
     let action = null
-    if (onFloor) {
+    if (onFloorNow) {
       if (!delivered && floorIdx === job.floor - 1 && Math.abs(p.x - doorX(targetUnitIdx)) < 2.6) action = 'deliver'
       else if (delivered && floorIdx === 0 && Math.abs(p.x - EXIT_X) < 3) action = 'exit'
     }
@@ -266,10 +283,45 @@ export default function BuildingWorld({ delivered, onAction }) {
       lastAction.current = action
       onAction(action)
     }
+    if (onFloorNow && floorIdx !== lastFloor.current) {
+      lastFloor.current = floorIdx
+      if (onFloor) onFloor(floorIdx)
+    }
 
-    // 카메라: 전 층이 보이도록 뒤로 빠지고, x만 살짝 팔로우
-    const camX = THREE.MathUtils.clamp(p.x, 24, 40)
-    camera.position.lerp(new THREE.Vector3(camX, FLOOR_H * 2 - 1, 46), Math.min(1, dt * 4))
+    // 다음에 가야 할 계단/출구 위 화살표 안내
+    if (guide.current) {
+      const targetFloor = job.floor - 1
+      let gp = null
+      let down = false
+      if (!delivered) {
+        if (floorIdx < targetFloor) gp = STAIR_MID[floorIdx]
+        else if (floorIdx > targetFloor) {
+          gp = STAIR_MID[floorIdx - 1]
+          down = true
+        }
+      } else if (floorIdx > 0) {
+        gp = STAIR_MID[floorIdx - 1]
+        down = true
+      } else {
+        gp = [EXIT_X, 0]
+        down = true
+      }
+      guide.current.visible = Boolean(gp) && onFloorNow
+      if (gp) {
+        guide.current.position.set(gp[0], gp[1] + 6.2 + Math.sin(performance.now() / 220) * 0.4, 1)
+        guide.current.rotation.z = down ? Math.PI : 0 // 콘 기본 = 위쪽
+      }
+    }
+
+    // 카메라: 화면 비율 기준으로 플레이어를 놓치지 않게 팔로우 (좁은 화면은 뒤로 빠짐)
+    const aspect = size.width / size.height
+    const halfTan = Math.tan(THREE.MathUtils.degToRad(23)) // fov 46의 절반
+    const camZ = Math.max(46, 17 / (halfTan * Math.max(aspect, 0.3)))
+    const halfW = halfTan * camZ * aspect
+    const lo = halfW - 5
+    const hi = BLD_W - halfW + 5
+    const camX = lo > hi ? BLD_W / 2 : THREE.MathUtils.clamp(p.x, lo, hi)
+    camera.position.lerp(new THREE.Vector3(camX, FLOOR_H * 2 - 1, camZ), Math.min(1, dt * 4))
     camera.lookAt(camX, FLOOR_H * 2 - 1.5, 0)
   })
 
@@ -297,6 +349,11 @@ export default function BuildingWorld({ delivered, onAction }) {
           <meshBasicMaterial color="#000" transparent opacity={0.2} />
         </mesh>
       </group>
+      {/* 길안내 화살표 (다음 계단/출구) */}
+      <mesh ref={guide}>
+        <coneGeometry args={[0.9, 1.8, 4]} />
+        <meshBasicMaterial color="#fbbf24" />
+      </mesh>
     </group>
   )
 }

@@ -150,6 +150,14 @@ export function pickTarget(distanceTier) {
   return pool[Math.floor(Math.random() * pool.length)] || buildings[0]
 }
 
+// 픽업 가게: 역세권 상가 건물 중 하나
+export function pickShop(excludeId) {
+  const pool = buildings.filter(
+    (b) => b.commercial && b.id !== excludeId && Math.hypot(b.x - SPAWN.x, b.z - SPAWN.z) < 120
+  )
+  return pool[Math.floor(Math.random() * pool.length)] || buildings.find((b) => b.commercial)
+}
+
 // 목적지 앞 도로변 주차 베이 위치 (가장 가까운 도로점에서 건물 쪽으로 살짝 offset)
 export function bayFor(building) {
   const { qx, qz } = distToRoads(building.x, building.z)

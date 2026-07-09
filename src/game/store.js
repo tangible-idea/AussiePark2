@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { DAY_START, DAY_END } from './time'
 import { generateSigns, allowedMinutes } from './signs'
 import { generateJobs } from './jobs'
-import { pickTarget, bayFor } from './mapData'
+import { pickTarget, bayFor, pickShop } from './mapData'
 
 export const FINE_AMOUNT = 121      // 주차 위반 벌금 (AUD)
 export const DAILY_COST = 45        // 하루 생활비 (셰어하우스 + 밥)
@@ -19,8 +19,11 @@ export const useGame = create((set, get) => ({
   fines: 0,
 
   job: null,
-  target: null,              // 목적지 건물 (mapData.buildings 항목)
+  phase: 'pickup',           // 'pickup'(가게로) → 'dropoff'(고객 건물로)
+  shop: null,                // 픽업 가게 건물
+  target: null,              // 배달 목적지 건물 (mapData.buildings 항목)
   bay: null,                 // 목적지 앞 주차 베이 {x, z, angle}
+  deliverBy: null,           // 이 시각까지 배달 못 하면 배달비 50%
   jobChoices: generateJobs(),
   signChoices: null,
   parkedSign: null,
@@ -44,7 +47,28 @@ export const useGame = create((set, get) => ({
 
   chooseJob: (job) => {
     const target = pickTarget(job.distance)
-    set({ job, target, bay: bayFor(target), scene: 'city', result: null })
+    const { clock } = get()
+    set({
+      job,
+      target,
+      bay: bayFor(target),
+      shop: pickShop(target.id),
+      phase: 'pickup',
+      deliverBy: clock + job.timeLimit,
+      scene: 'city',
+      result: null,
+    })
+  },
+
+  // 가게 앞에서 픽업 완료
+  pickup: () => set({ phase: 'dropoff' }),
+
+  // 콜 화면에서 안 고르고 있으면 제일 좋은 콜부터 사라진다
+  expireBestJob: () => {
+    const { jobChoices } = get()
+    if (jobChoices.length <= 1) return
+    const best = jobChoices.reduce((a, b) => (a.pay > b.pay ? a : b))
+    set({ jobChoices: jobChoices.filter((j) => j.id !== best.id) })
   },
 
   // 주차 공간에서 주차 버튼 → 표지판 3택 제시
@@ -67,24 +91,26 @@ export const useGame = create((set, get) => ({
     })
   },
 
-  // 건물에서 배달 완료하고 나옴
+  // 건물에서 배달 완료하고 나옴 (제한시간 초과 = 배달비 50%)
   exitBuilding: () => {
-    const { clock, allowedUntil, money, job, deliveries, fines } = get()
+    const { clock, allowedUntil, deliverBy, money, job, deliveries, fines } = get()
     const over = clock - allowedUntil
+    const late = clock > deliverBy
+    const pay = late ? Math.max(2, Math.floor(job.pay / 2)) : job.pay
     if (over > 0) {
       set({
         money: money - FINE_AMOUNT,
         fines: fines + 1,
         deliveries: deliveries + 1,
-        result: { type: 'fine', amount: FINE_AMOUNT, pay: job.pay, overMinutes: over },
+        result: { type: 'fine', amount: FINE_AMOUNT, pay, late, overMinutes: over },
         scene: 'result',
         parkedSign: null,
       })
     } else {
       set({
-        money: money + job.pay,
+        money: money + pay,
         deliveries: deliveries + 1,
-        result: { type: 'pay', amount: job.pay },
+        result: { type: 'pay', amount: pay, late },
         scene: 'result',
         parkedSign: null,
       })
@@ -103,8 +129,11 @@ export const useGame = create((set, get) => ({
     set({
       money: netMoney,
       job: null,
+      phase: 'pickup',
+      shop: null,
       target: null,
       bay: null,
+      deliverBy: null,
       jobChoices: generateJobs(),
       scene: 'cards',
       result: null,
@@ -125,8 +154,11 @@ export const useGame = create((set, get) => ({
       dayIdx: (dayIdx + 1) % 7,
       clock: DAY_START,
       job: null,
+      phase: 'pickup',
+      shop: null,
       target: null,
       bay: null,
+      deliverBy: null,
       jobChoices: generateJobs(),
       scene: 'cards',
     })
@@ -142,8 +174,11 @@ export const useGame = create((set, get) => ({
       deliveries: 0,
       fines: 0,
       job: null,
+      phase: 'pickup',
+      shop: null,
       target: null,
       bay: null,
+      deliverBy: null,
       jobChoices: generateJobs(),
       signChoices: null,
       parkedSign: null,

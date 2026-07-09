@@ -1,7 +1,11 @@
+import { useState, useEffect } from 'react'
 import { useGame } from '../game/store'
 import { formatClock, DAY_NAMES_KO } from '../game/time'
 
-// 폰에서 배달앱 콜을 보고 수락하는 화면
+// 폰에서 배달앱 콜을 보고 수락하는 화면.
+// 미적거리면 EXPIRE_SEC마다 제일 좋은(비싼) 콜부터 다른 라이더에게 넘어간다.
+const EXPIRE_SEC = 8
+
 const TIER_INFO = {
   near: { km: '0.4km', eta: '3분', color: 'text-emerald-400' },
   mid: { km: '1.1km', eta: '7분', color: 'text-amber-400' },
@@ -9,7 +13,26 @@ const TIER_INFO = {
 }
 
 export default function JobCards() {
-  const { jobChoices, chooseJob, day, dayIdx, clock, money, deliveries } = useGame()
+  const { jobChoices, chooseJob, expireBestJob, day, dayIdx, clock, money, deliveries } = useGame()
+  const [countdown, setCountdown] = useState(EXPIRE_SEC)
+
+  const bestId =
+    jobChoices.length > 1 ? jobChoices.reduce((a, b) => (a.pay > b.pay ? a : b)).id : null
+
+  useEffect(() => {
+    if (!bestId) return
+    setCountdown(EXPIRE_SEC)
+    const iv = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          expireBestJob()
+          return EXPIRE_SEC
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(iv)
+  }, [bestId, expireBestJob])
 
   return (
     <div className="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -48,15 +71,26 @@ export default function JobCards() {
 
           {/* 새 콜 배너 */}
           <div className="mx-4 -mt-2.5 mb-1 bg-red-500 text-white text-center text-xs font-bold rounded-full py-1.5 shadow-lg animate-pulse z-10">
-            🔔 새 배달 요청 {jobChoices.length}건 — 하나를 선택하세요
+            🔔 새 콜 {jobChoices.length}건 — 미적거리면 좋은 콜부터 뺏겨요!
           </div>
 
           {/* 콜 리스트 */}
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3">
             {jobChoices.map((job) => {
               const t = TIER_INFO[job.tier]
+              const expiring = job.id === bestId
               return (
-                <div key={job.id} className="bg-slate-800 rounded-2xl p-4 border border-white/5 shadow-md">
+                <div
+                  key={job.id}
+                  className={`bg-slate-800 rounded-2xl p-4 border shadow-md relative ${
+                    expiring ? 'border-red-400/60' : 'border-white/5'
+                  }`}
+                >
+                  {expiring && (
+                    <div className="absolute -top-2.5 right-3 bg-red-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow tabular-nums">
+                      ⏳ {countdown}초 후 다른 라이더에게
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-2.5">
                       <span className="text-3xl">{job.shop.split(' ')[0]}</span>
@@ -71,9 +105,11 @@ export default function JobCards() {
                   </div>
                   {/* 픽업 → 배달지 */}
                   <div className="text-[12px] space-y-1.5 mb-3 pl-1">
-                    <div className="flex items-center gap-2 text-white/60">
+                    <div className="flex items-center gap-2 text-white/90">
                       <span className="w-4 text-center">🏪</span>
-                      <span>픽업 완료 — 보온가방에 있음</span>
+                      <span>
+                        픽업: <b>{job.shop.slice(job.shop.indexOf(' ') + 1)}</b>
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-white/90">
                       <span className="w-4 text-center">📍</span>
@@ -81,6 +117,10 @@ export default function JobCards() {
                         {job.street} <b className="text-amber-300">{job.unit}호</b>
                         <span className="text-white/50 ml-1">({job.floor}층 · 엘리베이터 없음)</span>
                       </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-white/60">
+                      <span className="w-4 text-center">⏱</span>
+                      <span>제한시간 <b className="text-white/90">{job.timeLimit}분</b> — 초과 시 배달비 50%</span>
                     </div>
                   </div>
                   <button

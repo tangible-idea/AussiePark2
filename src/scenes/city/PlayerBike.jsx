@@ -7,16 +7,15 @@ import { buildings, MAP_EXTENT, SPAWN } from '../../game/mapData'
 import Character, { EBike } from '../shared/Character'
 
 const SPEED = 17
-const PARK_DIST = 5.5
 const PLAYER_R = 1.3
 
-// 조이스틱 주행 + 카메라 팔로우 + 주차 베이 판정
-// mapView면 플레이어~목적지가 다 보이게 줌아웃
-export default function PlayerBike({ bay, onNearBay, mapView }) {
+// 조이스틱 주행 + 카메라 팔로우 + 목표 지점(가게/주차베이) 근접 판정
+// mapView면 플레이어~목표가 다 보이게 줌아웃
+export default function PlayerBike({ objective, onNear, mapView, hasBag }) {
   const group = useRef()
-  // 테스트용: ?spawnbay 이면 주차 베이 옆에서 시작
+  // 테스트용: ?spawnbay 이면 목표 지점 옆에서 시작
   const atBay = import.meta.env.DEV && new URLSearchParams(location.search).has('spawnbay')
-  const pos = useRef(new THREE.Vector3(atBay ? bay.x : SPAWN.x, 0, atBay ? bay.z : SPAWN.z))
+  const pos = useRef(new THREE.Vector3(atBay ? objective.x : SPAWN.x, 0, atBay ? objective.z : SPAWN.z))
   const heading = useRef(0)
   const lean = useRef(0)
   const lookAt = useRef(new THREE.Vector3(SPAWN.x, 0, SPAWN.z))
@@ -59,11 +58,11 @@ export default function PlayerBike({ bay, onNearBay, mapView }) {
         lean.current = THREE.MathUtils.lerp(lean.current, 0, dt * 6)
       }
 
-      // 주차 판정
-      const near = Math.hypot(pos.current.x - bay.x, pos.current.z - bay.z) < PARK_DIST
+      // 목표 근접 판정 (픽업 가게 or 주차 베이)
+      const near = Math.hypot(pos.current.x - objective.x, pos.current.z - objective.z) < objective.r
       if (near !== wasNear.current) {
         wasNear.current = near
-        onNearBay(near)
+        onNear(near)
       }
     } else {
       speedRef.current = 0
@@ -78,9 +77,9 @@ export default function PlayerBike({ bay, onNearBay, mapView }) {
     // 카메라: 평소엔 GTA2식 팔로우, 지도 모드엔 플레이어~목적지 전체가 보이게 줌아웃
     const p = pos.current
     if (mapView) {
-      const midX = (p.x + bay.x) / 2
-      const midZ = (p.z + bay.z) / 2
-      const span = Math.max(Math.abs(p.x - bay.x), Math.abs(p.z - bay.z)) + 120
+      const midX = (p.x + objective.x) / 2
+      const midZ = (p.z + objective.z) / 2
+      const span = Math.max(Math.abs(p.x - objective.x), Math.abs(p.z - objective.z)) + 120
       const camY = Math.min(480, span * 1.15)
       camera.position.lerp(new THREE.Vector3(midX, camY, midZ + span * 0.18), Math.min(1, dt * 3.5))
       lookAt.current.lerp(new THREE.Vector3(midX, 0, midZ), Math.min(1, dt * 3.5))
@@ -95,7 +94,7 @@ export default function PlayerBike({ bay, onNearBay, mapView }) {
     <group ref={group}>
       <EBike speedRef={speedRef} />
       <group position={[0, 1.1, -0.45]}>
-        <Character riding speedRef={speedRef} scale={0.95} />
+        <Character riding speedRef={speedRef} scale={0.95} withBag={hasBag} />
       </group>
       {/* 그림자 블롭 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
