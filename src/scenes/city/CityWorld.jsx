@@ -337,7 +337,7 @@ function Store({ nearStore }) {
   )
 }
 
-function Buildings({ targetId }) {
+function Buildings({ targetId, highlightColor = '#e8641b' }) {
   return (
     <group>
       {buildings.map((b) => {
@@ -347,7 +347,7 @@ function Buildings({ targetId }) {
           <group key={b.id} position={[b.x, 0, b.z]}>
             <mesh position={[0, b.h / 2, 0]}>
               <boxGeometry args={[b.w, b.h, b.d]} />
-              <meshLambertMaterial color={isTarget ? '#e8641b' : b.color} />
+              <meshLambertMaterial color={isTarget ? highlightColor : b.color} />
             </mesh>
             {/* 지붕: 상가는 콘크리트 옥상, 주택은 박공지붕(footprint에 정렬) */}
             <mesh
@@ -359,7 +359,7 @@ function Buildings({ targetId }) {
               ) : (
                 <coneGeometry args={[Math.max(b.w, b.d) * 0.78, 2.4, 4]} />
               )}
-              <meshLambertMaterial color={isTarget ? '#b34a10' : b.commercial ? '#c9ccd2' : b.roof} />
+              <meshLambertMaterial color={isTarget ? highlightColor : b.commercial ? '#c9ccd2' : b.roof} />
             </mesh>
             {/* 상가 옥상 에어컨 실외기 */}
             {b.commercial && (
@@ -375,8 +375,9 @@ function Buildings({ targetId }) {
   )
 }
 
-// 목적지 마커 + 주차 베이 (+지도 줌아웃 모드일 때만 빛기둥 하이라이트)
-export function TargetMarkers({ target, bay, nearBay, mapView }) {
+// 현재 목표(픽업 가게 or 배달 건물) 마커 + 주차 베이 (+지도 모드일 때만 빛기둥)
+export function TargetMarkers({ focus, bay, nearBay, mapView, color = '#fbbf24' }) {
+  const target = focus
   const marker = useRef()
   const ring = useRef()
   const beam = useRef()
@@ -405,33 +406,43 @@ export function TargetMarkers({ target, bay, nearBay, mapView }) {
     <group>
       <mesh ref={marker} position={[target.x, target.h + 7, target.z]}>
         <coneGeometry args={[1.8, 3.6, 4]} />
-        <meshBasicMaterial color="#fbbf24" />
+        <meshBasicMaterial color={color} />
       </mesh>
-      {/* 지도 모드: 목적지 빛기둥 */}
+      {/* 지도 모드: 목표 빛기둥 */}
       {mapView && (
         <mesh ref={beam} position={[target.x, 80, target.z]}>
           <cylinderGeometry args={[4, 7, 160, 12, 1, true]} />
-          <meshBasicMaterial color="#fbbf24" transparent opacity={0.35} side={THREE.DoubleSide} depthWrite={false} />
+          <meshBasicMaterial color={color} transparent opacity={0.35} side={THREE.DoubleSide} depthWrite={false} />
         </mesh>
       )}
-      <group position={[bay.x, 0, bay.z]}>
-        <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
-          <ringGeometry args={[3.4, 4.4, 32]} />
-          <meshBasicMaterial color={nearBay ? '#22c55e' : '#3b82f6'} transparent opacity={0.9} />
+      {/* 주차 베이: 배달 단계에서만 */}
+      {bay && (
+        <group position={[bay.x, 0, bay.z]}>
+          <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+            <ringGeometry args={[3.4, 4.4, 32]} />
+            <meshBasicMaterial color={nearBay ? '#22c55e' : '#3b82f6'} transparent opacity={0.9} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+            <circleGeometry args={[3.4, 32]} />
+            <meshBasicMaterial color="#1d4ed8" transparent opacity={nearBay ? 0.65 : 0.4} />
+          </mesh>
+          <sprite position={[0, 4.5, 0]} scale={[3.2, 3.2, 1]}>
+            <spriteMaterial map={pTex} />
+          </sprite>
+        </group>
+      )}
+      {/* 픽업 단계: 가게 앞 청록 링 */}
+      {!bay && (
+        <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[target.x, 0.06, target.z]}>
+          <ringGeometry args={[Math.max(target.w, target.d) / 2 + 4, Math.max(target.w, target.d) / 2 + 5.2, 40]} />
+          <meshBasicMaterial color={nearBay ? '#22c55e' : '#2dd4bf'} transparent opacity={0.85} />
         </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
-          <circleGeometry args={[3.4, 32]} />
-          <meshBasicMaterial color="#1d4ed8" transparent opacity={nearBay ? 0.65 : 0.4} />
-        </mesh>
-        <sprite position={[0, 4.5, 0]} scale={[3.2, 3.2, 1]}>
-          <spriteMaterial map={pTex} />
-        </sprite>
-      </group>
+      )}
     </group>
   )
 }
 
-export default function CityWorld({ targetId, nearStore }) {
+export default function CityWorld({ targetId, highlightColor, nearStore }) {
   return (
     <group>
       {/* 대지 */}
@@ -452,7 +463,7 @@ export default function CityWorld({ targetId, nearStore }) {
       <Rail />
       <Train />
       <Station />
-      <Buildings targetId={targetId} />
+      <Buildings targetId={targetId} highlightColor={highlightColor} />
       <Store nearStore={nearStore} />
       <StreetProps />
       {/* 나무: 일부는 시드니 명물 자카란다 (보라 캐노피) */}

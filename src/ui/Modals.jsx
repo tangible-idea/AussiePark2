@@ -18,14 +18,22 @@ export function ResultModal() {
               주차 시간을 <b className="text-red-300">{formatDuration(result.overMinutes)}</b> 초과했습니다.
             </p>
             <div className="bg-black/40 rounded-xl p-3 text-sm space-y-1 mb-5">
-              <div className="flex justify-between"><span>배달비</span><span className="text-emerald-300">+${result.pay}</span></div>
+              <div className="flex justify-between">
+                <span>배달비{result.late && <span className="text-orange-400 ml-1">(지각 50%)</span>}</span>
+                <span className="text-emerald-300">+${result.pay}</span>
+              </div>
               <div className="flex justify-between"><span>벌금</span><span className="text-red-400">−${FINE_AMOUNT}</span></div>
             </div>
           </>
         ) : (
           <>
-            <div className="text-5xl mb-3">✅</div>
-            <h2 className="text-xl font-bold text-emerald-300 mb-2">배달 완료!</h2>
+            <div className="text-5xl mb-3">{result.late ? '😓' : '✅'}</div>
+            <h2 className="text-xl font-bold text-emerald-300 mb-2">
+              {result.late ? '늦은 배달...' : '배달 완료!'}
+            </h2>
+            {result.late && (
+              <p className="text-orange-400 text-sm mb-2">제한시간 초과 — 배달비 50%만 받았다</p>
+            )}
             <div className="text-3xl font-extrabold text-emerald-300 mb-5">+${result.amount}</div>
           </>
         )}
