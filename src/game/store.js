@@ -3,6 +3,7 @@ import { DAY_START, DAY_END } from './time'
 import { generateSigns, allowedMinutes } from './signs'
 import { generateJobs } from './jobs'
 import { pickTarget, bayFor, pickShop } from './mapData'
+import { playSfx } from './audio'
 
 export const FINE_AMOUNT = 121      // 주차 위반 벌금 (AUD)
 export const DAILY_COST = 45        // 하루 생활비 (셰어하우스 + 밥)
@@ -50,6 +51,7 @@ export const useGame = create((set, get) => ({
     // 시간이 흐르면 점점 배고파진다 (하루 풀타임 기준 포만감 약 -40)
     const fullness = clampStat(stats.fullness - gameMinutes * 0.05)
     if (next >= DAY_END && scene !== 'building') {
+      playSfx('dayEnd')
       set({ clock: DAY_END, scene: 'dayEnd', stats: { ...stats, fullness } })
       return
     }
@@ -60,6 +62,7 @@ export const useGame = create((set, get) => ({
   eatMeal: () => {
     const { money, stats } = get()
     if (money < MEAL_COST) return
+    playSfx('eat')
     set({
       money: money - MEAL_COST,
       stats: {
@@ -81,6 +84,7 @@ export const useGame = create((set, get) => ({
   },
 
   chooseJob: (job) => {
+    playSfx('accept')
     const target = pickTarget(job.distance)
     const { clock } = get()
     set({
@@ -96,7 +100,10 @@ export const useGame = create((set, get) => ({
   },
 
   // 가게 앞에서 픽업 완료
-  pickup: () => set({ phase: 'dropoff' }),
+  pickup: () => {
+    playSfx('pickup')
+    set({ phase: 'dropoff' })
+  },
 
   // 콜 화면에서 안 고르고 있으면 제일 좋은 콜부터 사라진다
   expireBestJob: () => {
@@ -108,13 +115,18 @@ export const useGame = create((set, get) => ({
 
   // 주차 공간에서 주차 버튼 → 표지판 3택 제시
   openSignSelect: () => {
+    playSfx('click')
     const { dayIdx, clock } = get()
     set({ signChoices: generateSigns(dayIdx, Math.floor(clock)), scene: 'signSelect' })
   },
 
-  cancelSignSelect: () => set({ signChoices: null, scene: 'city' }),
+  cancelSignSelect: () => {
+    playSfx('cancel')
+    set({ signChoices: null, scene: 'city' })
+  },
 
   chooseSign: (sign) => {
+    playSfx('park')
     const { dayIdx, clock } = get()
     const allowed = allowedMinutes(sign, dayIdx, Math.floor(clock))
     set({
@@ -140,6 +152,7 @@ export const useGame = create((set, get) => ({
     const late = clock > deliverBy
     const pay = late ? Math.max(2, Math.floor(job.pay / 2)) : job.pay
     if (over > 0) {
+      playSfx('fine')
       set({
         stats: grown,
         money: money - FINE_AMOUNT,
@@ -150,6 +163,7 @@ export const useGame = create((set, get) => ({
         parkedSign: null,
       })
     } else {
+      playSfx(late ? 'late' : 'success')
       set({
         stats: grown,
         money: money + pay,
@@ -167,6 +181,7 @@ export const useGame = create((set, get) => ({
     // 벌금을 물었어도 배달비는 받는다
     const netMoney = result?.type === 'fine' ? money + result.pay : money
     if (netMoney <= 0) {
+      playSfx('gameOver')
       set({ money: netMoney, scene: 'gameover', result: null })
       return
     }
@@ -189,6 +204,7 @@ export const useGame = create((set, get) => ({
     const { money, day, dayIdx, stats } = get()
     const after = money - DAILY_COST
     if (after <= 0) {
+      playSfx('gameOver')
       set({ money: after, scene: 'gameover' })
       return
     }
@@ -214,7 +230,8 @@ export const useGame = create((set, get) => ({
     })
   },
 
-  restart: () =>
+  restart: () => {
+    playSfx('click')
     set({
       scene: 'cards',
       money: START_MONEY,
@@ -237,7 +254,8 @@ export const useGame = create((set, get) => ({
       result: null,
       stats: { ...START_STATS },
       statFx: null,
-    }),
+    })
+  },
 }))
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {
